@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>色弱遊戲</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0px;
+            padding: 0px;
+            background-color: darkslategray;
+            width: 100%;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            position: relative;
+            user-select: none;
+        }
+
+        #container {
+            width: 500px;
+            height: 500px;
+            background-color: #FFF;
+            border-radius: 10px;
+            flex-wrap: wrap;
+            display: flex;
+            padding: 10px;
+            margin-top: 80px;
+            display: none;
+        }
+
+        #container.act {
+            display: flex;
+        }
+
+        .box {
+            background-color: lightpink;
+            border: 10px solid #FFF;
+            border-radius: 15px;
+            cursor: pointer;
+        }
+
+        .box.answer {
+            opacity: 0.6;
+        }
+
+        /* 答案色塊陰影效果 */
+        .box.answer.act {
+            box-shadow: 2px 2px 10px rgba(0, 0, 0, 5);
+        }
+
+        /* 分數區塊設置 */
+        .score {
+            width: 100px;
+            height: 100px;
+            line-height: 80px;
+            background-color: gold;
+            position: absolute;
+            top: 50px;
+            border-radius: 100px;
+            border: 10px solid #FFF;
+            font-size: 30px;
+            text-align: center;
+            display: none;
+        }
+
+        .score.act {
+            display: block;
+        }
+
+        /* 開始畫面設置 */
+        .start-game {
+            display: flex;
+            flex-direction: column;
+            align-content: center;
+            justify-content: center;
+        }
+
+        .startbtn {
+            margin: auto;
+            width: 400px;
+            height: 100px;
+            line-height: 100px;
+            font-size: 60px;
+            font-weight: bolder;
+            text-align: center;
+            background-color: darksalmon;
+            border-radius: 15px;
+            cursor: pointer;
+        }
+
+        .startbtn:hover {
+            color: #FFF;
+            background-color: brown;
+        }
+
+        /* 開始說明區域 */
+        .illustrate {
+            color: #FFF;
+            font-size: 28px;
+            text-align: center;
+            margin-top: 10px;
+        }
+
+        /* 時間區塊設定 */
+        .timebox {
+            margin-top: 20px;
+            display: none;
+        }
+
+        .time {
+            display: none;
+        }
+
+        .time.act,
+        .timebox.act {
+            display: flex;
+            justify-content: center;
+        }
+
+        .time,
+        .restartbtn,
+        .stop,
+        .hint {
+            width: 150px;
+            height: 60px;
+            line-height: 50px;
+            border-radius: 10px;
+            text-align: center;
+            margin: 20px;
+            font-size: 20px;
+            font-weight: bolder;
+            border: 5px solid #FFF;
+            background-color: yellowgreen;
+
+        }
+
+        .time.red {
+            color: whitesmoke;
+            background-color: crimson;
+        }
+
+
+        .restartbtn,
+        .stop {
+            width: 120px;
+            padding: 0px;
+            background-color: cadetblue;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .restartbtn:hover,
+        .stop:hover {
+            font-size: 22px;
+            color: salmon;
+            background-color: midnightblue;
+            transition: 0.2s;
+
+        }
+
+        /* 提示按鈕SOS */
+        .timebox .hint {
+            width: 60px;
+            border-radius: 60px;
+            background-color: tomato;
+            cursor: pointer;
+        }
+
+        .timebox .hint:hover {
+            color: yellow;
+        }
+
+
+        /* 結束結果統計 */
+        .end {
+            width: 700px;
+            height: 400px;
+            border-radius: 20px;
+            font-size: 50px;
+            text-align: center;
+            padding: 15px 0px;
+            background-color: rgb(49, 59, 32);
+            color: #FFF;
+            display: none;
+        }
+
+        .end>div {
+            padding: 20px 0px;
+            font-size: 40px;
+        }
+
+        .end .end2 {
+            font-size: 30px;
+            color: khaki;
+        }
+
+        .end.act {
+            display: block;
+        }
+    </style>
+
+</head>
+
+<body>
+    <div class="start-game">
+        <button class="startbtn" onclick="startGame()">Start Game</button>
+        <div class="illustrate"><h2>色 弱 遊 戲</h2>點擊StartGame開始遊戲<br>時間計時30秒後即結束遊戲<br>測試自己辨識顏色的能力<br><br>小提醒<br>點錯色塊或者點擊提示都會扣分<br>｡:.ﾟヽ(*´∀`)ﾉﾟ.:｡</div>
+    </div>
+    <div class="score"></div>
+    <div id="container">
+    </div>
+    <div class="end">--遊戲結束--
+        <div class="end1">總得分</div>
+        <div class="end2">評語</div>
+        <button class="restartbtn" onclick="restart()">重新開始</button>
+    </div>
+    <div class="timebox">
+        <div class="time">剩餘時間</div>
+        <button class="stop" onclick="stoptime()">暫停計時</button>
+        <button class="hint" onclick="sos()">SOS</button>
+    </div>
+
+    <!-- JS -->
+    <Script>
+        const container = document.querySelector('#container');
+        // const Ansbox = document.querySelector('#container .box.answer');
+        // console.log(Ansbox);
+        const scorearea = document.querySelector('.score');
+        const startGamebtn = document.querySelector('.start-game');
+        const timebtn = document.querySelector('.timebox');
+        const timeArea = document.querySelector('.time');
+        const result = document.querySelector('.end');
+        const result1 = document.querySelector('.end .end1');
+        const result2 = document.querySelector('.end .end2');
+        const sosbtn = document.querySelector('.timebox .hint');
+
+
+        let score = -1 //分數初始設定
+
+
+
+
+        //事件:重置色塊
+        function reset() {
+            score++;
+            scorearea.innerHTML = score;
+
+
+
+            //事件:生成小色塊
+            function makeBox() {
+
+                //根據分數升級方塊數量
+                //1-4分:2x2
+                //5-10分:3x3
+                //11-20分:4x4
+                //21-30分:5x5
+                //31-40分:6x6
+                //最多7x7
+
+                let side = 0
+                if (score <= 4) {
+                    side = 2
+                } else if (score <= 10) {
+                    side = 3
+                } else if (score <= 20) {
+                    side = 4
+                } else if (score <= 30) {
+                    side = 5
+                } else if (score <= 40) {
+                    side = 6
+                }
+                else {
+                    side = 7
+                }
+
+                //用亂數抓答案: 抓取總色塊數量的隨機亂數
+                let answer = Math.floor(Math.random() * (side * side));
+                // console.log(answer);
+                // 用亂數生成顏色: RGB 三個數值(0-256之間)
+                let colorR = Math.floor(Math.random() * 210);
+                let colorG = Math.floor(Math.random() * 150);
+                let colorB = Math.floor(Math.random() * 256);
+
+                // 難度用分數判定
+                //(0-10:0.4, 11-20:0.5, 21-30:0.7, 31~:0.85)
+                let opacity = 0
+                if (score <= 10) {
+                    opacity = 0.4
+                } else if (score <= 20) {
+                    opacity = 0.5
+                } else if (score <= 30) {
+                    opacity = 0.7
+                } else {
+                    opacity = 0.85
+                }
+
+
+                container.innerHTML = '';//清空
+
+                //生成色塊 : 
+                for (let i = 0; i < side * side; i++) {
+
+                    if (i == answer) {
+                        container.innerHTML +=
+                            `<div class="box answer" style="opacity: ${opacity}; width: calc(100% / ${side}); height: calc(100% / ${side});background-color:rgb(${colorR},${colorG},${colorB});" onclick="reset()"></div>`;
+                    } else {
+                        container.innerHTML +=
+                            `<div class="box" style="width: calc(100% / ${side}); height: calc(100% / ${side}); background-color: rgb(${colorR},${colorG},${colorB})" onclick="wrong()"></div>`;
+                    }
+                }
+
+
+
+            }
+            makeBox();
+        }
+        reset();
+
+
+        //事件:點擊提示時答案色塊出現光暈,而且還會觸發扣分事件(σ′▽‵)′▽‵)σ
+        function sos() {
+            let Ansbox = document.querySelector('#container .box.answer');//每次點擊時重新抓取
+            Ansbox.classList.add('act');//加入陰影
+            wrong();
+        }
+
+        //事件:點錯扣分
+        function wrong() {
+            score--;
+            scorearea.innerHTML = score;
+        }
+
+        //事件:開始遊戲的按鈕
+        function startGame() {
+            container.classList.add('act');
+            scorearea.classList.add('act');
+            timebtn.classList.add('act');
+            timeArea.classList.add('act');
+            startGamebtn.style = "display:none";
+            starttime();//點擊開始遊戲後啟動事件:計算時間
+
+        }
+
+        //時間倒數設定
+        let time = 30;
+        let flag = true
+
+
+        //事件:開始計算時間
+        function starttime() {
+            var timerun = setInterval(function () {
+                time = time - 0.1;
+                timeArea.innerHTML = `剩餘:${time.toFixed(1)}秒`;
+
+                if (time <= 5) { //秒數5以下剩餘時間的背景轉紅
+                    timeArea.classList.add('red');
+                }
+
+                if (time <= 0) { //秒數小於等於0的時候,時間停止計算
+                    clearInterval(timerun);
+                    container.classList.remove('act');
+                    scorearea.classList.remove('act');
+                    timebtn.classList.remove('act');
+                    timeArea.classList.remove('act');
+                    result.classList.add('act');
+                    result1.innerHTML = `獲得分數: ${score} 分`;
+
+
+                    //加入評語
+                    if (score <= 4) {
+                        result2.innerHTML = '你的眼睛跟蝙蝠一樣(((ﾟДﾟ;))),建議去眼科檢查喔';
+                    } else if (score <= 10) {
+                        result2.innerHTML = '你的眼睛跟鼴鼠一樣(((ﾟДﾟ;))),建議去眼科檢查喔';
+                    } else if (score <= 20) {
+                        result2.innerHTML = '汪,你的眼睛跟狗差不多(=´ᴥ`)';
+                    } else if (score <= 30) {
+                        result2.innerHTML = '你有一雙不錯的貓貓眼ヾ(*ΦωΦ)ツ';
+                    } else if (score <= 40) {
+                        result2.innerHTML = '有...有點厲害,你的眼睛跟老虎一樣犀利(=Φ౪Φ=)';
+                    }
+                    else {
+                        result2.innerHTML = '很棒嘛，你是鷹眼(๑•̀ㅂ•́)و✧';
+                    }
+                }
+
+            }, 100)
+
+        }
+        //暫停按鈕:利用alert的中斷特性暫停時間
+        function stoptime() {
+            alert('整整──石化(*´∀`)≡o────★° \n準備好了再按確定唷(๑•̀ㅂ•́)و✧');
+
+        }
+
+        //事件:重新開始-重整頁面
+        function restart() {
+            window.location.reload();
+        }
+
+
+    //尚未解決重複點擊開始計算的堆疊秒數問題 0725解決
+    //解決辦法:直接拿掉開始計算按鈕,讓秒數從點擊開始遊戲後計算
+    //尚未解決一旦點擊方塊便直接開始跑秒數 0725解決
+    //解決辦法:同上,一點擊開始遊戲就跑秒數
+    //尚未解決秒數結束後不可以繼續點擊:預計做法:直接timeout時方塊直接none掉
+    //0725已完成:none掉大方塊,出現統計分數區塊
+
+
+    //已完成:
+    //(1)點擊到解答能刷新方塊(2)要計分(3)要有倒數計時(4)暫停時間(5)時間結束秀出分數及評語(6)要能重玩
+    //尚未完成:
+    //(7)提示
+
+    </Script>
+
+</body>
+
+</html>
